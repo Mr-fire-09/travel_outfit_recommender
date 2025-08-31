@@ -1,17 +1,72 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
+
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  String _season = 'Summer';
+
+  // Map season to button color
+  Color getButtonColor() {
+    switch (_season) {
+      case 'Winter':
+        return Colors.black;
+      case 'Summer':
+        return Colors.yellow.shade700;
+      case 'Rainy':
+        return Colors.blue;
+      case 'Spring':
+        return Colors.green;
+      case 'Autumn':
+        return Colors.orange;
+      default:
+        return Colors.redAccent;
+    }
+  }
+
+  Color getTextColor() {
+    return (_season == 'Summer') ? Colors.black : Colors.white;
+  }
+
+  void _showRandomOutfitDialog() {
+    final outfits = [
+      'T-shirt, Shorts, Sneakers',
+      'Raincoat, Boots, Umbrella',
+      'Sweater, Jeans, Scarf',
+      'Dress, Sandals, Hat',
+      'Jacket, Trousers, Beanie',
+    ];
+    final random = Random();
+    final suggestion = outfits[random.nextInt(outfits.length)];
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Random Outfit Suggestion'),
+        content: Text(suggestion),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.teal.shade300, Colors.teal.shade700],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.black, Colors.redAccent],
           ),
         ),
         child: Center(
@@ -20,29 +75,73 @@ class WelcomeScreen extends StatelessWidget {
             children: [
               const Icon(
                 Icons.shopping_bag_outlined,
-                size: 100,
-                color: Colors.white,
+                size: 110,
+                color: Colors.redAccent,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
               const Text(
                 'Travel Outfit\nRecommender',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 32,
+                  fontSize: 36,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
+                  letterSpacing: 1.5,
+                  shadows: [
+                    Shadow(
+                      blurRadius: 8,
+                      color: Colors.redAccent,
+                      offset: Offset(2, 2),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 30),
+              // Season dropdown for demo
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: DropdownButtonFormField<String>(
+                  value: _season,
+                  dropdownColor: Colors.black87,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.1),
+                    labelText: 'Select Season',
+                    labelStyle: const TextStyle(color: Colors.white),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                  items: const [
+                    DropdownMenuItem(value: 'Summer', child: Text('Summer')),
+                    DropdownMenuItem(value: 'Winter', child: Text('Winter')),
+                    DropdownMenuItem(value: 'Spring', child: Text('Spring')),
+                    DropdownMenuItem(value: 'Autumn', child: Text('Autumn')),
+                    DropdownMenuItem(value: 'Rainy', child: Text('Rainy')),
+                  ],
+                  onChanged: (val) {
+                    setState(() {
+                      _season = val!;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 30),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 40,
-                    vertical: 15,
-                  ),
+                  backgroundColor: getButtonColor(),
+                  foregroundColor: getTextColor(),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 50, vertical: 18),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
+                  ),
+                  elevation: 8,
+                  textStyle: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 onPressed: () {
@@ -53,9 +152,40 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                   );
                 },
-                child: const Text(
-                  'Get Started',
-                  style: TextStyle(fontSize: 18, color: Colors.teal),
+                child: const Text('Get Started'),
+              ),
+              const SizedBox(height: 15),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.shuffle, color: Colors.white),
+                label: const Text(
+                  'Random Outfit',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.white, width: 2),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                ),
+                onPressed: _showRandomOutfitDialog,
+              ),
+              const SizedBox(height: 60),
+              const Text(
+                'Created by Neeraj Singh',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.2,
+                  shadows: [
+                    Shadow(
+                      blurRadius: 6,
+                      color: Colors.black54,
+                      offset: Offset(1, 1),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -202,15 +332,14 @@ class _OutfitFormPageState extends State<OutfitFormPage> {
                             prefixIcon: Icon(Icons.wb_sunny),
                           ),
                           value: _season,
-                          items:
-                              _seasons
-                                  .map(
-                                    (s) => DropdownMenuItem(
-                                      value: s,
-                                      child: Text(s),
-                                    ),
-                                  )
-                                  .toList(),
+                          items: _seasons
+                              .map(
+                                (s) => DropdownMenuItem(
+                                  value: s,
+                                  child: Text(s),
+                                ),
+                              )
+                              .toList(),
                           onChanged: (val) => setState(() => _season = val!),
                         ),
                         const SizedBox(height: 16),
@@ -220,15 +349,14 @@ class _OutfitFormPageState extends State<OutfitFormPage> {
                             prefixIcon: Icon(Icons.landscape),
                           ),
                           value: _location,
-                          items:
-                              _locations
-                                  .map(
-                                    (l) => DropdownMenuItem(
-                                      value: l,
-                                      child: Text(l),
-                                    ),
-                                  )
-                                  .toList(),
+                          items: _locations
+                              .map(
+                                (l) => DropdownMenuItem(
+                                  value: l,
+                                  child: Text(l),
+                                ),
+                              )
+                              .toList(),
                           onChanged: (val) => setState(() => _location = val!),
                         ),
                         const SizedBox(height: 16),
@@ -238,15 +366,14 @@ class _OutfitFormPageState extends State<OutfitFormPage> {
                             prefixIcon: Icon(Icons.category),
                           ),
                           value: _purpose,
-                          items:
-                              _purposes
-                                  .map(
-                                    (p) => DropdownMenuItem(
-                                      value: p,
-                                      child: Text(p),
-                                    ),
-                                  )
-                                  .toList(),
+                          items: _purposes
+                              .map(
+                                (p) => DropdownMenuItem(
+                                  value: p,
+                                  child: Text(p),
+                                ),
+                              )
+                              .toList(),
                           onChanged: (val) => setState(() => _purpose = val!),
                         ),
                         const SizedBox(height: 16),
@@ -256,25 +383,23 @@ class _OutfitFormPageState extends State<OutfitFormPage> {
                             prefixIcon: Icon(Icons.person),
                           ),
                           value: _selectedGender,
-                          items:
-                              _genders
-                                  .map(
-                                    (g) => DropdownMenuItem(
-                                      value: g,
-                                      child: Text(g),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged:
-                              (val) => setState(() => _selectedGender = val!),
+                          items: _genders
+                              .map(
+                                (g) => DropdownMenuItem(
+                                  value: g,
+                                  child: Text(g),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (val) =>
+                              setState(() => _selectedGender = val!),
                         ),
                         const SizedBox(height: 16),
                         SwitchListTile(
                           title: const Text('Include Accessories'),
                           value: _includeAccessories,
-                          onChanged:
-                              (val) =>
-                                  setState(() => _includeAccessories = val),
+                          onChanged: (val) =>
+                              setState(() => _includeAccessories = val),
                         ),
                       ],
                     ),
@@ -297,43 +422,42 @@ class _OutfitFormPageState extends State<OutfitFormPage> {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children:
-                            outfitSuggestions.entries.map((entry) {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "${entry.key} Outfit:",
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleLarge?.copyWith(
+                        children: outfitSuggestions.entries.map((entry) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "${entry.key} Outfit:",
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.titleLarge?.copyWith(
                                       color: Colors.teal,
                                       fontWeight: FontWeight.bold,
                                     ),
+                              ),
+                              const SizedBox(height: 8),
+                              ...entry.value.map(
+                                (item) => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 4,
                                   ),
-                                  const SizedBox(height: 8),
-                                  ...entry.value.map(
-                                    (item) => Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 4,
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.check_circle,
+                                        color: Colors.teal,
+                                        size: 20,
                                       ),
-                                      child: Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.check_circle,
-                                            color: Colors.teal,
-                                            size: 20,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(item),
-                                        ],
-                                      ),
-                                    ),
+                                      const SizedBox(width: 8),
+                                      Text(item),
+                                    ],
                                   ),
-                                  const SizedBox(height: 16),
-                                ],
-                              );
-                            }).toList(),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                          );
+                        }).toList(),
                       ),
                     ),
                   ),
