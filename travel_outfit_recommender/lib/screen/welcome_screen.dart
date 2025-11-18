@@ -8,8 +8,27 @@ class WelcomeScreen extends StatefulWidget {
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen> {
+class _WelcomeScreenState extends State<WelcomeScreen>
+    with SingleTickerProviderStateMixin {
   String _season = 'Summer';
+  late AnimationController _ctrl;
+  late List<Particle> particles;
+  final Random _rnd = Random();
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl =
+        AnimationController(vsync: this, duration: const Duration(seconds: 10))
+          ..repeat();
+    particles = List.generate(30, (i) => Particle.random(_rnd));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   // Map season to button color
   Color getButtonColor() {
@@ -19,18 +38,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       case 'Summer':
         return Colors.yellow.shade700;
       case 'Rainy':
-        return Colors.blue;
+        return Colors.blue.shade700;
       case 'Spring':
-        return Colors.green;
+        return Colors.green.shade600;
       case 'Autumn':
-        return Colors.orange;
+        return Colors.deepOrange.shade700;
       default:
         return Colors.redAccent;
     }
   }
 
   Color getTextColor() {
-    return (_season == 'Summer') ? Colors.black : Colors.white;
+    return (_season == 'Summer' || _season == 'Spring')
+        ? Colors.black
+        : Colors.white;
   }
 
   void _showRandomOutfitDialog() {
@@ -41,8 +62,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       'Dress, Sandals, Hat',
       'Jacket, Trousers, Beanie',
     ];
-    final random = Random();
-    final suggestion = outfits[random.nextInt(outfits.length)];
+    final suggestion = outfits[_rnd.nextInt(outfits.length)];
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -58,142 +78,351 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.black, Colors.redAccent],
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.shopping_bag_outlined,
-                size: 110,
-                color: Colors.redAccent,
-              ),
-              const SizedBox(height: 30),
-              const Text(
-                'Travel Outfit\nRecommender',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 1.5,
-                  shadows: [
-                    Shadow(
-                      blurRadius: 8,
-                      color: Colors.redAccent,
-                      offset: Offset(2, 2),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 30),
-              // Season dropdown for demo
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: DropdownButtonFormField<String>(
-                  value: _season,
-                  dropdownColor: Colors.black87,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.1),
-                    labelText: 'Select Season',
-                    labelStyle: const TextStyle(color: Colors.white),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                  items: const [
-                    DropdownMenuItem(value: 'Summer', child: Text('Summer')),
-                    DropdownMenuItem(value: 'Winter', child: Text('Winter')),
-                    DropdownMenuItem(value: 'Spring', child: Text('Spring')),
-                    DropdownMenuItem(value: 'Autumn', child: Text('Autumn')),
-                    DropdownMenuItem(value: 'Rainy', child: Text('Rainy')),
-                  ],
-                  onChanged: (val) {
-                    setState(() {
-                      _season = val!;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: getButtonColor(),
-                  foregroundColor: getTextColor(),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 50, vertical: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  elevation: 8,
-                  textStyle: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const OutfitFormPage(),
-                    ),
-                  );
-                },
-                child: const Text('Get Started'),
-              ),
-              const SizedBox(height: 15),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.shuffle, color: Colors.white),
-                label: const Text(
-                  'Random Outfit',
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.white, width: 2),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30)),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                ),
-                onPressed: _showRandomOutfitDialog,
-              ),
-              const SizedBox(height: 60),
-              const Text(
-                'Created by Neeraj Singh',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.2,
-                  shadows: [
-                    Shadow(
-                      blurRadius: 6,
-                      color: Colors.black54,
-                      offset: Offset(1, 1),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+  Widget _buildSeasonSelector() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _season,
+          dropdownColor: Colors.black87,
+          items: const [
+            DropdownMenuItem(value: 'Summer', child: Text('Summer')),
+            DropdownMenuItem(value: 'Winter', child: Text('Winter')),
+            DropdownMenuItem(value: 'Spring', child: Text('Spring')),
+            DropdownMenuItem(value: 'Autumn', child: Text('Autumn')),
+            DropdownMenuItem(value: 'Rainy', child: Text('Rainy')),
+          ],
+          onChanged: (val) => setState(() => _season = val ?? 'Summer'),
         ),
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final buttonColor = getButtonColor();
+    final textColor = getTextColor();
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Animated gradient background
+          AnimatedGradient(
+            animation: _ctrl,
+            season: _season,
+          ),
+
+          // Particle / weather simulation layer
+          AnimatedBuilder(
+            animation: _ctrl,
+            builder: (context, child) {
+              // update particles positions
+              for (final p in particles) p.update(_ctrl.value, _season);
+              return CustomPaint(
+                painter: ParticlePainter(particles, season: _season),
+                size: MediaQuery.of(context).size,
+              );
+            },
+          ),
+
+          // Content
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 28.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Animated title
+                  ScaleTransition(
+                    scale: Tween<double>(begin: 0.95, end: 1.05).animate(
+                        CurvedAnimation(
+                            parent: _ctrl,
+                            curve: const Interval(0.0, 0.25,
+                                curve: Curves.easeInOut))),
+                    child: FadeTransition(
+                      opacity:
+                          Tween<double>(begin: 0.8, end: 1.0).animate(_ctrl),
+                      child: Column(
+                        children: [
+                          Icon(Icons.checkroom, size: 96, color: buttonColor),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Welcome to Your Wardrobe',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                              shadows: [
+                                Shadow(
+                                    blurRadius: 8,
+                                    color: buttonColor.withOpacity(0.6),
+                                    offset: const Offset(0, 2)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // season selector
+                  _buildSeasonSelector(),
+
+                  const SizedBox(height: 20),
+
+                  // animated primary button
+                  AnimatedButton(
+                    color: buttonColor,
+                    textColor: textColor,
+                    label: 'Get Started',
+                    onPressed: () {
+                      // small burst animation simulated by changing particles
+                      for (var i = 0; i < 20; i++)
+                        particles.add(Particle.random(_rnd, burst: true));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const OutfitFormPage()),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // secondary action
+                  OutlinedButton.icon(
+                    onPressed: _showRandomOutfitDialog,
+                    icon: const Icon(Icons.shuffle, color: Colors.white),
+                    label: const Text('Random Outfit',
+                        style: TextStyle(color: Colors.white)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.white24),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)),
+                    ),
+                  ),
+
+                  const SizedBox(height: 36),
+
+                  // author name
+                  Text(
+                    'Created by Neeraj Singh',
+                    style: TextStyle(
+                        color: textColor.withOpacity(0.9),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/* ---------- Supporting animated widgets & particle simulation ---------- */
+
+class AnimatedGradient extends StatelessWidget {
+  final Animation<double> animation;
+  final String season;
+  const AnimatedGradient(
+      {required this.animation, required this.season, super.key});
+
+  List<Color> _colorsForSeason() {
+    switch (season) {
+      case 'Winter':
+        return [Colors.black, Colors.blueGrey.shade900];
+      case 'Summer':
+        return [Colors.black, Colors.yellow.shade700];
+      case 'Rainy':
+        return [Colors.black, Colors.blue.shade700];
+      case 'Spring':
+        return [Colors.black, Colors.green.shade600];
+      case 'Autumn':
+        return [Colors.black, Colors.deepOrange.shade700];
+      default:
+        return [Colors.black, Colors.redAccent];
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = _colorsForSeason();
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final t = (sin(animation.value * 2 * pi) + 1) / 2;
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color.lerp(colors[0], colors[1], t) ?? colors[0],
+                Color.lerp(colors[1], colors[0], t) ?? colors[1],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class AnimatedButton extends StatefulWidget {
+  final Color color;
+  final Color textColor;
+  final VoidCallback onPressed;
+  final String label;
+  const AnimatedButton(
+      {required this.color,
+      required this.textColor,
+      required this.onPressed,
+      required this.label,
+      super.key});
+  @override
+  State<AnimatedButton> createState() => _AnimatedButtonState();
+}
+
+class _AnimatedButtonState extends State<AnimatedButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _c;
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 900))
+      ..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = Tween<double>(begin: 1.0, end: 1.03)
+        .animate(CurvedAnimation(parent: _c, curve: Curves.easeInOut));
+    return ScaleTransition(
+      scale: scale,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: widget.color,
+          foregroundColor: widget.textColor,
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          elevation: 10,
+        ),
+        onPressed: widget.onPressed,
+        child: Text(widget.label,
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: widget.textColor)),
+      ),
+    );
+  }
+}
+
+/* Simple particle model to simulate rain/snow/bubbles */
+class Particle {
+  Offset pos;
+  double size;
+  double speed;
+  Color color;
+  double drift;
+
+  Particle(
+      {required this.pos,
+      required this.size,
+      required this.speed,
+      required this.color,
+      required this.drift});
+
+  factory Particle.random(Random rnd, {bool burst = false}) {
+    return Particle(
+      pos: Offset(rnd.nextDouble(), rnd.nextDouble()),
+      size: burst ? (2 + rnd.nextDouble() * 6) : (1 + rnd.nextDouble() * 4),
+      speed: burst
+          ? (0.5 + rnd.nextDouble() * 2)
+          : (0.01 + rnd.nextDouble() * 0.06),
+      color: Colors.white.withOpacity(0.85),
+      drift: (rnd.nextDouble() - 0.5) * 0.2,
+    );
+  }
+
+  void update(double t, String season) {
+    // Move particle depending on season
+    switch (season) {
+      case 'Rainy':
+        pos = Offset(pos.dx + drift * 0.02, pos.dy + speed * 2);
+        break;
+      case 'Winter':
+        pos = Offset(pos.dx + drift * 0.01, pos.dy + speed * 0.5);
+        break;
+      case 'Summer':
+        pos = Offset(
+            pos.dx + drift * 0.01, pos.dy - speed * 0.4); // rising bubbles
+        break;
+      default:
+        pos = Offset(pos.dx + drift * 0.01, pos.dy + speed * 0.5);
+    }
+    if (pos.dy > 1.2) pos = Offset(Random().nextDouble(), -0.2);
+    if (pos.dy < -0.3) pos = Offset(Random().nextDouble(), 1.2);
+    if (pos.dx < -0.3 || pos.dx > 1.3)
+      pos = Offset(Random().nextDouble(), pos.dy);
+  }
+}
+
+class ParticlePainter extends CustomPainter {
+  final List<Particle> particles;
+  final String season;
+  ParticlePainter(this.particles, {required this.season});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+    for (final p in particles) {
+      final cx = p.pos.dx * size.width;
+      final cy = p.pos.dy * size.height;
+      if (season == 'Rainy') {
+        paint.color = Colors.white.withOpacity(0.12);
+        canvas.drawLine(
+            Offset(cx - 2, cy - 8),
+            Offset(cx + 2, cy + 8),
+            paint
+              ..strokeWidth = 2.0
+              ..strokeCap = StrokeCap.round);
+      } else if (season == 'Winter') {
+        paint.color = Colors.white.withOpacity(0.9);
+        canvas.drawCircle(Offset(cx, cy), p.size, paint);
+      } else if (season == 'Summer') {
+        paint.color = Colors.yellow.withOpacity(0.25 + p.size * 0.03);
+        canvas.drawCircle(Offset(cx, cy), p.size + 2, paint);
+      } else {
+        paint.color = Colors.white.withOpacity(0.08 + p.size * 0.02);
+        canvas.drawCircle(Offset(cx, cy), p.size, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant ParticlePainter oldDelegate) => true;
 }
 
 // OutfitFormPage definition starts here (same file)
